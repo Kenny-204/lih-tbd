@@ -114,11 +114,13 @@ export default function DashboardPage() {
         try {
           const { count, error: countError } = await supabase
             .from("crops")
-            .select("*", { count: "exact", head: true }); // `head: true` avoids fetching actual rows
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", currentUser.uid); // `head: true` avoids fetching actual rows
           setCount(count);
           const { count: severity, error: severityCountError } = await supabase
             .from("crops")
             .select("*", { count: "exact", head: true })
+            .eq("user_id", currentUser.uid)
             .eq("severity", "Critical"); // filter by severity
           setSeverityCount(severity);
           const { data, error } = await supabase
