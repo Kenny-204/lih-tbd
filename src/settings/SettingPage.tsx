@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Settings,
   User,
   Map,
   CreditCard,
-  Users,
   Bell,
-  Key,
   ExternalLink,
   Plus,
 } from "lucide-react";

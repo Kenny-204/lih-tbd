@@ -1,5 +1,5 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
-import React, { useState } from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Map as MapIcon,
@@ -41,10 +41,6 @@ const NAV_ITEMS = [
   { label: "History", icon: History, href: "history" },
   { label: "Settings", icon: Settings, href: "settings" },
 ];
-
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
 
 export default function DashboardLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);

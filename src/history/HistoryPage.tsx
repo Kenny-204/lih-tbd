@@ -108,6 +108,7 @@ export default function HistoryPage() {
     severity: "all",
     source: "all",
   });
+  console.log(setData)
 
   // Utility to get the correct badge style
   const getBadgeStyle = (severity: string, issue: string) => {
