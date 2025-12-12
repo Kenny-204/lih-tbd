@@ -33,6 +33,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { CustomMobileNet } from "@teachablemachine/image";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/supabase/config";
 
 export default function UploadWizard() {
   const [cropType, setCropType] = useState("Maize");
@@ -53,6 +55,7 @@ export default function UploadWizard() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const handleNavigation = (id: string) => {
     // In a real application (e.g., Next.js, React Router), you would use:
@@ -73,29 +76,87 @@ export default function UploadWizard() {
     try {
       const predictions = await model.predict(imgElement);
       predictions.sort((a, b) => b.probability - a.probability);
-
-      const diagnosisResult = {
-        topClass: predictions[0].className,
+      const predictionData = {
+        user_id: currentUser?.uid,
+        crop_name: cropType,
         confidence: (predictions[0].probability * 100).toFixed(1),
-        // Log all predictions for DB storage
-        allPredictions: predictions,
-        crop: cropType,
-        timestamp: new Date().toISOString(),
+        diagnosis: predictions[0].className,
       };
+      console.log(predictions);
 
-      // 🌟 STEP 3: LOG/SAVE TO DB 🌟
-      console.log(diagnosisResult);
+      const geminiKey = "AIzaSyDZPKpGYfyznnt9UxToh6Zq9O1k322eolw";
+
+      const MODEL = "gemini-2.5-flash-lite";
+
+      async function getTreatment(predictionData: {
+        user_id: string;
+        crop_name: string;
+        confidence: string;
+        diagnosis: string;
+      }) {
+        const prompt = `
+            Here is the prediction data:
+            ${JSON.stringify(predictionData)}
+            Output a JSON object exactly like this (no extra text):
+            {
+              "severity": "",
+              "treatment_plan": "",
+              "key_symptoms": []
+            }
+            Fill the fields based on the prediction.
+            `;
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": geminiKey,
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+            }),
+          }
+        );
+
+        const geminiData = await res.json();
+        return JSON.parse(
+          geminiData.candidates?.[0]?.content?.parts?.[0]?.text
+            .replace(/```json\s*([\s\S]*?)```/, "$1")
+            .trim() || ""
+        );
+      }
+
+      const geminiResponse = await getTreatment(predictionData);
+
+      const { data, error } = await supabase
+        .from("crops")
+        .insert([
+          {
+            user_id: currentUser?.uid,
+            crop_name: cropType,
+            confidence: (predictions[0].probability * 100).toFixed(1),
+            diagnosis: predictions[0].className,
+            severity: geminiResponse.severity,
+            treatment_plan: geminiResponse.treatment_plan,
+            key_symptoms: geminiResponse.key_symptoms,
+          },
+        ])
+        .select();
+
+      // console.log(data.id, error);
 
       // Generate a Mock Analysis ID (replace with actual DB insert ID)
-      const mockId = `L-${Math.floor(Math.random() * 10000)}`;
-      setNewAnalysisId(mockId);
+      // const mockId = `L-${Math.floor(Math.random() * 10000)}`;
+      // setNewAnalysisId(mockId);
 
       // 🌟 STEP 4: TRIGGER REDIRECT (after prediction finishes) 🌟
-      handleNavigation(mockId);
+      handleNavigation(data[0].id);
     } catch (error) {
       console.error("Prediction error:", error);
       setUploadStatus("error"); // Set final status to error
-      alert("Error making prediction. Check console for details.");
+      console.log("Error making prediction. Check console for details.");
     }
 
     setIsPredicting(false);

@@ -68,6 +68,7 @@ export default function SignupPage() {
   const navigate = useNavigate();
 
   type signupData = {
+    fullName: string;
     email: string;
     password: string;
     passwordConfirm: string;
@@ -76,6 +77,7 @@ export default function SignupPage() {
   const form = useForm<signupData>({
     mode: "onSubmit",
     defaultValues: {
+      fullName: "e",
       email: "",
       password: "",
       passwordConfirm: "",
@@ -85,7 +87,7 @@ export default function SignupPage() {
   async function onSubmit(data: signupData) {
     try {
       setLoading(true);
-      await signup(data.email, data.password);
+      await signup(data);
       toast.success("Login successful... redirecting");
       navigate("/dashboard/home");
     } catch (err: unknown) {
@@ -98,20 +100,35 @@ export default function SignupPage() {
 
   return (
     <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-      {/* Full Name Input */}
-      <div className="grid gap-2">
-        <Label htmlFor="full-name">Full Name</Label>
-        <div className="relative">
-          <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-
-          <Input
-            id="full-name"
-            placeholder="John Doe"
-            className="pl-10"
-            required
-          />
-        </div>
-      </div>
+      <Controller
+        name="fullName"
+        control={form.control}
+        rules={{ required: "Enter your fullName" }}
+        render={({ field, fieldState }) => (
+          <div className="grid gap-2">
+            <Label htmlFor="signup-email">Full Name</Label>
+            <div className="relative" data-invalid={fieldState.invalid}>
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input
+                {...field}
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                className="pl-10"
+              />
+              {fieldState.invalid && (
+                <p
+                  // Tailwind styling for clarity
+                  className="text-sm font-medium text-rose-600 mt-1 flex items-center gap-1.5 animate-in fade-in"
+                >
+                  <MinusCircle className="h-4 w-4 shrink-0" />
+                  {fieldState.error?.message}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      />{" "}
       {/* Email Input */}
       <Controller
         name="email"
@@ -149,13 +166,14 @@ export default function SignupPage() {
         rules={{ required: "Enter your Password" }}
         render={({ field, fieldState }) => (
           <div className="grid gap-2">
-            <Label htmlFor="signup-email">Password</Label>
+            <Label htmlFor="signup-password">Password</Label>
             <div className="relative" data-invalid={fieldState.invalid}>
               <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
               <Input
                 {...field}
                 id="signup-password"
                 type="password"
+                placeholder="********"
                 className="pl-10"
               />
               {fieldState.invalid && (
@@ -188,6 +206,7 @@ export default function SignupPage() {
                 {...field}
                 id="signup-password-confirm"
                 type="password"
+                placeholder="********"
                 className="pl-10"
               />
               {fieldState.invalid && (

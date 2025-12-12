@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Calendar,
@@ -37,53 +37,104 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/supabase/config";
+import { useAuth } from "@/contexts/AuthContext";
+import { set } from "react-hook-form";
 
 // --- Mock Data: Field removed and diagnosis types streamlined ---
-const HISTORY_RECORDS = [
+// const HISTORY_RECORDS = [
+//   {
+//     id: "L-1005",
+//     date: "2025-10-30",
+//     crop: "Maize",
+//     diagnosis: "Nitrogen Deficiency",
+//     severity: "Critical",
+//     status: "Analyzed",
+//   },
+//   {
+//     id: "L-1004",
+//     date: "2025-10-25",
+//     crop: "Soybean",
+//     diagnosis: "Spider Mite Damage",
+//     severity: "Medium",
+//     status: "Analyzed",
+//   },
+//   {
+//     id: "L-1003",
+//     date: "2025-10-20",
+//     crop: "Wheat",
+//     diagnosis: "Healthy",
+//     severity: "None",
+//     status: "Analyzed",
+//   },
+//   {
+//     id: "L-1002",
+//     date: "2025-10-15",
+//     crop: "Potato",
+//     diagnosis: "Early Blight",
+//     severity: "Low",
+//     status: "Analyzed",
+//   },
+//   {
+//     id: "L-1001",
+//     date: "2025-10-10",
+//     crop: "Maize",
+//     diagnosis: "Processing",
+//     severity: "None",
+//     status: "Processing",
+//   },
+// ];
+
+interface crops {
+  id: string;
+  date: string;
+  crop: string;
+  diagnosis: string;
+  severity: string;
+  status: string;
+}
+const INITIAL_CROPS = [
   {
-    id: "L-1005",
-    date: "2025-10-30",
-    crop: "Maize",
-    diagnosis: "Nitrogen Deficiency",
-    severity: "Critical",
-    status: "Analyzed",
-  },
-  {
-    id: "L-1004",
-    date: "2025-10-25",
-    crop: "Soybean",
-    diagnosis: "Spider Mite Damage",
-    severity: "Medium",
-    status: "Analyzed",
-  },
-  {
-    id: "L-1003",
-    date: "2025-10-20",
-    crop: "Wheat",
-    diagnosis: "Healthy",
-    severity: "None",
-    status: "Analyzed",
-  },
-  {
-    id: "L-1002",
-    date: "2025-10-15",
-    crop: "Potato",
-    diagnosis: "Early Blight",
-    severity: "Low",
-    status: "Analyzed",
-  },
-  {
-    id: "L-1001",
-    date: "2025-10-10",
-    crop: "Maize",
-    diagnosis: "Processing",
-    severity: "None",
-    status: "Processing",
+    id: "",
+    date: "",
+    crop: "",
+    diagnosis: "",
+    severity: "",
+    status: "",
   },
 ];
 
 export default function HistoryPage() {
-  const [data] = useState(HISTORY_RECORDS); // Removed setData as it's not being used for mutations
+  const { currentUser } = useAuth();
+  const [crops, setCrops] = useState<crops[]>(INITIAL_CROPS);
+
+  useEffect(function () {
+    async function fetchCrop() {
+      try {
+        const { data, error } = await supabase
+          .from("crops")
+          .select("*")
+          .eq("user_id", currentUser.uid)
+          .order("created_at", { ascending: false }); // newest first
+
+        const formatted = data.map((c, index) => ({
+          id: `L-00${index + 1}`, // or c.id if you want the real ID
+          date: new Date(c.created_at).toLocaleString(),
+          crop: c.crop_name,
+          diagnosis: c.diagnosis.replace(/_/g, " "),
+          severity: c.severity,
+          status: "Analyzed",
+        }));
+        setCrops(formatted);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchCrop();
+  }, []);
+
+  console.log(crops);
+
   const [filters, setFilters] = useState({
     search: "",
     severity: "all",
@@ -105,7 +156,7 @@ export default function HistoryPage() {
         icon: <Zap className="h-3 w-3 animate-spin mr-1" />,
       };
     switch (severity) {
-      case "Critical":
+      case "High":
         return {
           color: "bg-rose-100 text-rose-700 border-rose-200",
         };
@@ -159,7 +210,7 @@ export default function HistoryPage() {
     return true;
   };
 
-  const filteredData = data.filter(applyFilters);
+  const filteredData = crops.filter(applyFilters);
 
   return (
     <div className="space-y-6">

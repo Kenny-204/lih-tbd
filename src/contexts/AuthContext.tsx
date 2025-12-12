@@ -7,12 +7,21 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  updateProfile,
   type User,
   type UserCredential,
 } from "firebase/auth";
 
 interface value {
-  signup: (email: string, password: string) => void;
+  signup: ({
+    email,
+    password,
+    fullName,
+  }: {
+    email: string;
+    password: string;
+    fullName: string;
+  }) => void;
   login: (email: string, password: string) => Promise<UserCredential>;
   signOut: () => void;
   passwordReset: (email: string) => Promise<void>;
@@ -42,19 +51,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  async function signup(email: string, password: string) {
-    return await createUserWithEmailAndPassword(auth, email, password);
-  }
-
-  function passwordReset(email: string) {
-    return sendPasswordResetEmail(auth, email);
+  async function signup({
+    email,
+    password,
+    fullName,
+  }: {
+    email: string;
+    password: string;
+    fullName: string;
+  }) {
+    const userCredentials = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    userCredentials;
+    await updateProfile(auth.currentUser, {
+      displayName: fullName,
+    });
+    console.log(userCredentials.user);
   }
 
   function login(email: string, password: string) {
     return signInWithEmailAndPassword(auth, email, password);
   }
+
   function signOut() {
     return auth.signOut();
+  }
+  function passwordReset(email: string) {
+    return sendPasswordResetEmail(auth, email);
   }
 
   const value = {

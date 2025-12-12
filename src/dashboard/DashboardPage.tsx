@@ -39,47 +39,99 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UploadWizard from "./UploadWizard";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/supabase/config";
+import { useAuth } from "@/contexts/AuthContext";
 
+interface analysis {
+  id: string;
+  crop: string;
+  date: string;
+  diagnosis: string;
+  severity: string;
+  status: string;
+}
+
+const initialAnalyses = [
+  {
+    id: "",
+    crop: "",
+    date: "",
+    diagnosis: "",
+    severity: "",
+    status: "",
+  },
+];
+
+const recentAnalyses = [
+  {
+    id: "L-1005",
+    // field: "North Sector A", <-- REMOVED
+    crop: "Maize",
+    date: "Today, 10:23 AM",
+    diagnosis: "Nitrogen Deficiency",
+    severity: "Critical",
+    status: "Analyzed",
+  },
+  {
+    id: "L-1004",
+    // field: "East River Plot", <-- REMOVED
+    crop: "Soybean",
+    date: "Today, 9:15 AM",
+    diagnosis: "Healthy",
+    severity: "None",
+    status: "Analyzed",
+  },
+  {
+    id: "L-1003",
+    // field: "South Hills Farm", <-- REMOVED
+    crop: "Wheat",
+    date: "Yesterday, 4:15 PM",
+    diagnosis: "Water Stress",
+    severity: "Medium",
+    status: "Processing",
+  },
+  {
+    id: "L-1002",
+    // field: "West Valley", <-- REMOVED
+    crop: "Potato",
+    date: "Oct 24, 2023",
+    diagnosis: "Pest Damage",
+    severity: "Low",
+    status: "Analyzed",
+  },
+];
 export default function DashboardPage() {
+  const [recentAnalyses, setRecentAnalyses] =
+    useState<analysis[]>(initialAnalyses);
+  const { currentUser } = useAuth();
+
+  useEffect(function () {
+    async function fetchCrop() {
+      try {
+        const { data, error } = await supabase
+          .from("crops")
+          .select("*")
+          .eq("user_id", currentUser.uid)
+          .order("created_at", { ascending: false })
+          .limit(5); // newest first
+
+        const formatted = data.map((c, index) => ({
+          id: `L-00${index + 1}`, // or c.id if you want the real ID
+          date: new Date(c.created_at).toLocaleString(),
+          crop: c.crop_name,
+          diagnosis: c.diagnosis.replace(/_/g, " "),
+          severity: c.severity,
+          status: "Analyzed",
+        }));
+        setRecentAnalyses(formatted);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchCrop();
+  }, []);
   // --- Mock Data (Updated: Removed 'field' property) ---
-  const recentAnalyses = [
-    {
-      id: "L-1005",
-      // field: "North Sector A", <-- REMOVED
-      crop: "Maize",
-      date: "Today, 10:23 AM",
-      diagnosis: "Nitrogen Deficiency",
-      severity: "Critical",
-      status: "Analyzed",
-    },
-    {
-      id: "L-1004",
-      // field: "East River Plot", <-- REMOVED
-      crop: "Soybean",
-      date: "Today, 9:15 AM",
-      diagnosis: "Healthy",
-      severity: "None",
-      status: "Analyzed",
-    },
-    {
-      id: "L-1003",
-      // field: "South Hills Farm", <-- REMOVED
-      crop: "Wheat",
-      date: "Yesterday, 4:15 PM",
-      diagnosis: "Water Stress",
-      severity: "Medium",
-      status: "Processing",
-    },
-    {
-      id: "L-1002",
-      // field: "West Valley", <-- REMOVED
-      crop: "Potato",
-      date: "Oct 24, 2023",
-      diagnosis: "Pest Damage",
-      severity: "Low",
-      status: "Analyzed",
-    },
-  ];
 
   // Utility to get the correct badge style (reused from History)
   const getBadgeStyle = (severity: string, diagnosis: string) => {
@@ -150,7 +202,7 @@ export default function DashboardPage() {
             <p className="text-xs text-slate-500 mt-1">
               <span className="text-emerald-600 font-medium flex items-center inline-block">
                 +25 <ArrowUpRight className="h-3 w-3 inline ml-0.5" />
-              </span>{" "}
+              </span>
               in the last 7 days
             </p>
           </CardContent>

@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/supabase/config";
 
 // --- Mock Data ---
 interface AnalysisMetadata {
@@ -27,24 +30,52 @@ interface AnalysisResult {
   metadata: AnalysisMetadata;
 }
 
-const ANALYSIS_RESULT: AnalysisResult = {
-  diagnosis: "Tomato Early blight",
-  confidence: 97,
-  severity: "Critical",
-  recommended_treatment:
-    "Apply Urea fertilizer (46-0-0) as a foliar spray immediately. Also consider a copper-based fungicide application.",
-  key_symptoms: [
-    "Yellowing starts at leaf tips",
-    "Progresses along the midrib in a V-shape",
-    "Older leaves affected first",
-  ],
-  metadata: {
-    crop: "Tomato",
-    scanDate: "Oct 30, 2025",
-  },
-};
+// const ANALYSIS_RESULT: AnalysisResult = {
+//   diagnosis: "Tomato Early blight",
+//   confidence: 97,
+//   severity: "Critical",
+//   recommended_treatment:
+//     "Apply Urea fertilizer (46-0-0) as a foliar spray immediately. Also consider a copper-based fungicide application.",
+//   key_symptoms: [
+//     "Yellowing starts at leaf tips",
+//     "Progresses along the midrib in a V-shape",
+//     "Older leaves affected first",
+//   ],
+//   metadata: {
+//     crop: "Tomato",
+//     scanDate: "Oct 30, 2025",
+//   },
+// };
 
 export default function LeafAnalysisDetail() {
+  const [analysisData, setAnalysisData] = useState(null);
+  const { id } = useParams();
+
+  useEffect(function () {
+    async function fetchCrop() {
+      try {
+        const { data, error } = await supabase
+          .from("crops")
+          .select("*")
+          .eq("id", id)
+          .single();
+        setAnalysisData({
+          diagnosis: data.diagnosis.split("_").join(" "),
+          confidence: data.confidence,
+          cropName: data.crop_name,
+          createdAt: data.created_at,
+          severity: data.severity,
+          recommended_treatment: data.treatment_plan,
+          key_symptoms: data.key_symptoms,
+        });
+        console.log(data, error);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchCrop();
+  }, []);
+
   const getSeverityColor = (severity: string): string => {
     switch (severity) {
       case "Critical":
@@ -61,10 +92,12 @@ export default function LeafAnalysisDetail() {
       {/* --- Header --- */}
       <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
         <Microscope className="h-7 w-7 text-emerald-600" />
-        Leaf Analysis: {ANALYSIS_RESULT.metadata.crop}
+        Leaf Analysis: {analysisData?.cropName || "Loading..."}
       </h1>
       <div className="flex items-center gap-4 text-slate-500">
-        <p>Sample scanned on **{ANALYSIS_RESULT.metadata.scanDate}**.</p>
+        <p>
+          Sample scanned on {new Date(analysisData?.createdAt).toDateString()}.
+        </p>
         <Separator orientation="vertical" className="h-4" />
         <Badge variant="outline" className="text-slate-600">
           <MapPin className="h-3 w-3 mr-1" /> Field Data Pending
@@ -87,14 +120,14 @@ export default function LeafAnalysisDetail() {
               <p className="text-sm text-slate-500">Predicted Issue:</p>
               <div className="flex items-center justify-between">
                 <h3 className="text-3xl font-extrabold text-slate-900">
-                  {ANALYSIS_RESULT.diagnosis}
+                  {analysisData?.diagnosis || "Loading..."}
                 </h3>
                 <Badge
                   className={`text-white ${getSeverityColor(
-                    ANALYSIS_RESULT.severity
+                    analysisData?.severity
                   )} text-base p-2`}
                 >
-                  {ANALYSIS_RESULT.severity}
+                  {analysisData?.severity}
                 </Badge>
               </div>
             </div>
@@ -108,7 +141,7 @@ export default function LeafAnalysisDetail() {
                 variant="secondary"
                 className="text-lg p-2 font-bold text-emerald-700"
               >
-                {ANALYSIS_RESULT.confidence}%
+                {analysisData?.confidence}%
               </Badge>
             </div>
 
@@ -119,7 +152,7 @@ export default function LeafAnalysisDetail() {
               Key Symptom Characteristics:
             </h4>
             <ul className="space-y-2">
-              {ANALYSIS_RESULT.key_symptoms.map((symptom, index) => (
+              {analysisData?.key_symptoms.map((symptom, index) => (
                 <li
                   key={index}
                   className="flex items-start gap-3 text-slate-600 text-sm"
@@ -141,7 +174,7 @@ export default function LeafAnalysisDetail() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-lg font-semibold text-slate-800">
-              {ANALYSIS_RESULT.recommended_treatment}
+              {analysisData?.recommended_treatment}
             </p>
 
             <Separator />
@@ -150,9 +183,9 @@ export default function LeafAnalysisDetail() {
               Detailed Action Steps:
             </h4>
             <p className="text-slate-600 text-sm">
-              Given the **{ANALYSIS_RESULT.severity}** severity, immediate
-              action is recommended. Consult local agricultural guidelines
-              before applying any treatment.
+              Given the **{analysisData?.severity}** severity, immediate action
+              is recommended. Consult local agricultural guidelines before
+              applying any treatment.
             </p>
 
             <Button className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4">
