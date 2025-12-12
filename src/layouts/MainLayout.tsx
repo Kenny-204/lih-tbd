@@ -36,7 +36,7 @@ const NAV_ITEMS = [
     href: "/dashboard",
     active: true,
   },
-  { label: "Field Analysis", icon: MapIcon, href: "analysis" },
+  { label: "Leaf Analysis", icon: MapIcon, href: "analysis" },
   { label: "Crop Health", icon: Leaf, href: "health" },
   { label: "History", icon: History, href: "history" },
   { label: "Settings", icon: Settings, href: "settings" },

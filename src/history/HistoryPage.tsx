@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   History,
   Search,
@@ -6,7 +6,9 @@ import {
   Filter,
   Download,
   ChevronDown,
-  ListRestart,
+  Leaf,
+  Microscope,
+  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,67 +39,52 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 
-// --- Mock Data ---
+// --- Mock Data: UPDATED for Leaf Analysis ---
 const HISTORY_RECORDS = [
   {
-    id: "A-1005",
-    date: "2025-10-25",
+    id: "L-1005",
+    date: "2025-10-30",
     field: "North Sector A",
     crop: "Maize",
-    issue: "Nitrogen Deficiency",
-    severity: "High",
-    source: "Drone",
-    status: "Completed",
+    diagnosis: "Nitrogen Deficiency",
+    severity: "Critical",
+    status: "Analyzed",
   },
   {
-    id: "A-1004",
+    id: "L-1004",
+    date: "2025-10-25",
+    field: "East River Plot",
+    crop: "Soybean",
+    diagnosis: "Water Stress",
+    severity: "Medium",
+    status: "Analyzed",
+  },
+  {
+    id: "L-1003",
+    date: "2025-10-20",
+    field: "South Hills Farm",
+    crop: "Wheat",
+    diagnosis: "Healthy",
+    severity: "None",
+    status: "Analyzed",
+  },
+  {
+    id: "L-1002",
+    date: "2025-10-15",
+    field: "West Valley",
+    crop: "Potato",
+    diagnosis: "Potassium Deficiency",
+    severity: "Low",
+    status: "AnalyAnalyzedzed",
+  },
+  {
+    id: "L-1001",
     date: "2025-10-10",
     field: "North Sector A",
     crop: "Maize",
-    issue: "Healthy",
+    diagnosis: "Processing",
     severity: "None",
-    source: "Satellite",
-    status: "Completed",
-  },
-  {
-    id: "B-2012",
-    date: "2025-10-28",
-    field: "East River Plot",
-    crop: "Soybean",
-    issue: "Water Stress",
-    severity: "Medium",
-    source: "Drone",
-    status: "Completed",
-  },
-  {
-    id: "C-3050",
-    date: "2025-11-01",
-    field: "South Hills Farm",
-    crop: "Wheat",
-    issue: "Processing",
-    severity: "None",
-    source: "Mobile",
     status: "Processing",
-  },
-  {
-    id: "D-4001",
-    date: "2025-09-15",
-    field: "West Valley",
-    crop: "Potato",
-    issue: "Pest Damage",
-    severity: "Low",
-    source: "Drone",
-    status: "Completed",
-  },
-  {
-    id: "E-5003",
-    date: "2025-08-20",
-    field: "North Sector A",
-    crop: "Maize",
-    issue: "Phosphorus Deficiency",
-    severity: "Medium",
-    source: "Satellite",
-    status: "Archived",
   },
 ];
 
@@ -106,16 +93,15 @@ export default function HistoryPage() {
   const [filters, setFilters] = useState({
     search: "",
     severity: "all",
-    source: "all",
+    crop: "all",
   });
-  console.log(setData)
 
   // Utility to get the correct badge style
-  const getBadgeStyle = (severity: string, issue: string) => {
-    if (issue === "Processing")
+  const getBadgeStyle = (severity, diagnosis) => {
+    if (diagnosis === "Processing")
       return { variant: "secondary", color: "bg-slate-100 text-slate-700" };
     switch (severity) {
-      case "High":
+      case "Critical":
         return {
           variant: "destructive",
           color: "bg-rose-100 text-rose-700 border-rose-200",
@@ -140,14 +126,8 @@ export default function HistoryPage() {
     }
   };
 
-  // Simplified filter function (in a real app, this would be optimized)
-  const applyFilters = (record: {
-    field: string;
-    issue: string;
-    id: string;
-    severity: string;
-    source: string;
-  }) => {
+  // Filter function
+  const applyFilters = (record) => {
     const searchTerm = filters.search.toLowerCase();
 
     // Search Filter
@@ -155,7 +135,7 @@ export default function HistoryPage() {
       searchTerm &&
       !(
         record.field.toLowerCase().includes(searchTerm) ||
-        record.issue.toLowerCase().includes(searchTerm) ||
+        record.diagnosis.toLowerCase().includes(searchTerm) ||
         record.id.toLowerCase().includes(searchTerm)
       )
     ) {
@@ -167,8 +147,8 @@ export default function HistoryPage() {
       return false;
     }
 
-    // Source Filter
-    if (filters.source !== "all" && record.source !== filters.source) {
+    // Crop Filter
+    if (filters.crop !== "all" && record.crop !== filters.crop) {
       return false;
     }
 
@@ -181,13 +161,13 @@ export default function HistoryPage() {
     <div className="space-y-6">
       {/* --- Page Header --- */}
       <div className="flex items-center gap-3">
-        <History className="h-6 w-6 text-emerald-600" />
+        <Microscope className="h-6 w-6 text-emerald-600" />
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Analysis History
+          Leaf Sample History
         </h1>
       </div>
       <p className="text-slate-500">
-        Review all past scans, filter by field, deficiency, or date.
+        Review all close-up leaf diagnoses and recommended treatments.
       </p>
 
       {/* --- Controls and Filters --- */}
@@ -196,14 +176,14 @@ export default function HistoryPage() {
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Search by ID, Field, or Issue..."
+            placeholder="Search by ID, Field, or Diagnosis..."
             className="pl-10 w-full"
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             value={filters.search}
           />
         </div>
 
-        {/* Date Picker (Placeholder for a Shadcn DatePicker component) */}
+        {/* Date Picker (Placeholder) */}
         <Button
           variant="outline"
           className="w-full sm:w-auto gap-2 text-slate-600"
@@ -223,27 +203,28 @@ export default function HistoryPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Severities</SelectItem>
-            <SelectItem value="High">Critical (High)</SelectItem>
-            <SelectItem value="Medium">Warning (Medium)</SelectItem>
-            <SelectItem value="Low">Minor (Low)</SelectItem>
-            <SelectItem value="None">Healthy (None)</SelectItem>
+            <SelectItem value="Critical">Critical</SelectItem>
+            <SelectItem value="Medium">Warning</SelectItem>
+            <SelectItem value="Low">Minor</SelectItem>
+            <SelectItem value="None">Healthy</SelectItem>
           </SelectContent>
         </Select>
 
-        {/* Source Filter */}
+        {/* Crop Filter (New Focus) */}
         <Select
-          onValueChange={(value) => setFilters({ ...filters, source: value })}
-          defaultValue={filters.source}
+          onValueChange={(value) => setFilters({ ...filters, crop: value })}
+          defaultValue={filters.crop}
         >
           <SelectTrigger className="w-full sm:w-[150px]">
-            <ListRestart className="h-4 w-4 mr-2 text-slate-500" />
-            <SelectValue placeholder="Source" />
+            <Leaf className="h-4 w-4 mr-2 text-slate-500" />
+            <SelectValue placeholder="Crop Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Sources</SelectItem>
-            <SelectItem value="Drone">Drone</SelectItem>
-            <SelectItem value="Satellite">Satellite</SelectItem>
-            <SelectItem value="Mobile">Mobile Close-up</SelectItem>
+            <SelectItem value="all">All Crops</SelectItem>
+            <SelectItem value="Maize">Maize</SelectItem>
+            <SelectItem value="Soybean">Soybean</SelectItem>
+            <SelectItem value="Wheat">Wheat</SelectItem>
+            <SelectItem value="Potato">Potato</SelectItem>
           </SelectContent>
         </Select>
 
@@ -257,19 +238,18 @@ export default function HistoryPage() {
       <Card>
         <div className="p-4 border-b">
           <p className="text-sm font-medium">
-            Found {filteredData.length} relevant records
+            Found {filteredData.length} relevant leaf samples
           </p>
         </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">Scan ID</TableHead>
+                <TableHead className="w-[120px]">Sample ID</TableHead>
                 <TableHead className="w-[120px]">Date</TableHead>
                 <TableHead>Field Name</TableHead>
-                <TableHead>Crop</TableHead>
-                <TableHead>Detected Issue</TableHead>
-                <TableHead className="hidden lg:table-cell">Source</TableHead>
+                <TableHead className="w-[120px]">Crop</TableHead>
+                <TableHead>AI Diagnosis</TableHead>
                 <TableHead className="text-right w-[100px] pr-6">
                   Actions
                 </TableHead>
@@ -277,7 +257,7 @@ export default function HistoryPage() {
             </TableHeader>
             <TableBody>
               {filteredData.map((record) => {
-                const badge = getBadgeStyle(record.severity, record.issue);
+                const badge = getBadgeStyle(record.severity, record.diagnosis);
                 return (
                   <TableRow
                     key={record.id}
@@ -295,11 +275,8 @@ export default function HistoryPage() {
                     </TableCell>
                     <TableCell>
                       <Badge className={`${badge.color} text-sm font-medium`}>
-                        {record.issue}
+                        {record.diagnosis}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell text-slate-500">
-                      {record.source}
                     </TableCell>
                     <TableCell className="text-right pr-6">
                       <DropdownMenu>
@@ -311,17 +288,17 @@ export default function HistoryPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>
-                            Record {record.id}
+                            Sample {record.id}
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuCheckboxItem checked>
-                            View Full Analysis
+                            View Full Diagnosis
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuCheckboxItem>
-                            Compare to Previous Scan
+                            Log Treatment Details
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuCheckboxItem>
-                            Download Raw Data
+                            Download Photo
                           </DropdownMenuCheckboxItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -332,10 +309,10 @@ export default function HistoryPage() {
               {filteredData.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={6}
                     className="h-24 text-center text-slate-500"
                   >
-                    No records found matching your filters.
+                    No leaf samples found matching your filters.
                   </TableCell>
                 </TableRow>
               )}
