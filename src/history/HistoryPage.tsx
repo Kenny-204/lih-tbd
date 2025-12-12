@@ -97,7 +97,14 @@ export default function HistoryPage() {
   });
 
   // Utility to get the correct badge style
-  const getBadgeStyle = (severity, diagnosis) => {
+  interface BadgeStyle {
+    variant: string;
+    color: string;
+  }
+
+  type Severity = "Critical" | "Medium" | "Low" | "None" | string;
+
+  const getBadgeStyle = (severity: Severity, diagnosis: string): BadgeStyle => {
     if (diagnosis === "Processing")
       return { variant: "secondary", color: "bg-slate-100 text-slate-700" };
     switch (severity) {
@@ -127,7 +134,13 @@ export default function HistoryPage() {
   };
 
   // Filter function
-  const applyFilters = (record) => {
+  const applyFilters = (record: {
+    field: string;
+    diagnosis: string;
+    id: string;
+    severity: string;
+    crop: string;
+  }) => {
     const searchTerm = filters.search.toLowerCase();
 
     // Search Filter

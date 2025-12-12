@@ -42,22 +42,17 @@ const MOCK_FIELDS = [
 export default function UploadWizard() {
   const [targetField, setTargetField] = useState(MOCK_FIELDS[0].id);
   const [cropType, setCropType] = useState("Maize");
-  const [files, setFiles] = useState([]);
+  type UploadedFile = { name: string; size: string; status: string };
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const [uploadStatus, setUploadStatus] = useState("idle"); // idle, uploading, complete, error
   const [progress, setProgress] = useState(0);
 
-  interface Files{
-    name: string;
-    size: string;
-    status: string;
-    type?: string;
-  }
-  const handleFileDrop = (e) => {
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation(); // Prevents files from opening in the browser
 
     // Filter to only accept common image types
-    const filesArray = Array.from(e.dataTransfer.files).filter((file:Files) =>
+    const filesArray = Array.from(e.dataTransfer.files).filter((file) =>
       file.type.startsWith("image/")
     );
 
@@ -74,13 +69,13 @@ export default function UploadWizard() {
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Filter to only accept common image types
-    const filesArray = Array.from(e.target.files).filter((file) =>
+    const filesArray = Array.from(e.target.files ?? []).filter((file: File) =>
       file.type.startsWith("image/")
     );
 
-    const uploadedFiles = filesArray.map((file) => ({
+    const uploadedFiles = filesArray.map((file: File) => ({
       name: file.name,
       size: (file.size / 1024 / 1024).toFixed(2),
       status: "pending",
@@ -210,7 +205,10 @@ export default function UploadWizard() {
               )
             } // Hover effect end
             className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer transition duration-200"
-            onClick={() => document.getElementById("file-input-leaf").click()}
+            onClick={() => {
+              const input = document.getElementById("file-input-leaf");
+              if (input) (input as HTMLInputElement).click();
+            }}
           >
             <UploadCloud className="h-10 w-10 text-slate-400 mx-auto mb-3" />
             <p className="font-semibold text-slate-700">

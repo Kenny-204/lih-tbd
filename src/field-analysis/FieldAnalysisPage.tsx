@@ -7,7 +7,23 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 // --- Mock Data ---
-const ANALYSIS_RESULT = {
+interface AnalysisMetadata {
+  crop: string;
+  sampleArea: string;
+  scanDate: string;
+}
+
+interface AnalysisResult {
+  diagnosis: string;
+  confidence: number;
+  severity: "Critical" | "Medium" | "Low";
+  recommended_treatment: string;
+  key_symptoms: string[];
+  image_url: string;
+  metadata: AnalysisMetadata;
+}
+
+const ANALYSIS_RESULT: AnalysisResult = {
   diagnosis: "Nitrogen (N) Deficiency",
   confidence: 97,
   severity: "Critical",
@@ -27,7 +43,7 @@ const ANALYSIS_RESULT = {
 };
 
 export default function LeafAnalysisDetail() {
-  const getSeverityColor = (severity) => {
+  const getSeverityColor = (severity: string): string => {
     switch (severity) {
       case "Critical":
         return "bg-rose-500 hover:bg-rose-600";
