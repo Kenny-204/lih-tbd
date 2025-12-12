@@ -1,13 +1,14 @@
 import {
   Leaf,
-  Map,
+  Map, // Keeping map for general geographical context, but usage is minimal
   Layers,
   Zap,
   ChevronRight,
   Shield,
-  TrendingUp,
+  Microscope, // New Icon for close-up analysis
   CheckCircle2,
   ArrowRight,
+  Camera, // New Icon for camera/photo focus
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ const Header = () => (
     </div>
     <nav className="hidden md:flex space-x-6 text-sm font-medium text-slate-600">
       <a href="#features" className="hover:text-emerald-600">
-        Features
+        How It Works
       </a>
       <a href="#pricing" className="hover:text-emerald-600">
         Pricing
@@ -59,15 +60,17 @@ const HeroSection = () => (
       variant="outline"
       className="bg-emerald-50 text-emerald-700 border-emerald-300 px-3 py-1 mb-4 text-sm font-semibold"
     >
-      <Zap className="h-3 w-3 mr-1" /> AI-Powered Nutrient Detection
+      <Zap className="h-3 w-3 mr-1" /> Instant Disease & Nutrient Diagnosis
     </Badge>
     <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-slate-900 max-w-4xl mx-auto leading-tight">
-      Stop Guessing. Apply Fertilizer{" "}
-      <span className="text-emerald-600">Precisely Where</span> it's Needed.
+      Just Snap a Photo. Get{" "}
+      <span className="text-emerald-600">Actionable Plant Health</span> Insights
+      in Seconds.
     </h1>
     <p className="text-xl text-slate-600 mt-5 max-w-3xl mx-auto">
-      Leverage computer vision to analyze drone and satellite imagery, instantly
-      diagnosing nutrient deficiencies before they impact your yield.
+      Turn your phone's camera into an agricultural laboratory. Upload close-up
+      leaf images to instantly detect diseases, pests, and nutrient
+      deficiencies.
     </p>
     <div className="mt-8 flex justify-center space-x-4">
       <Button
@@ -81,7 +84,7 @@ const HeroSection = () => (
       </Button>
     </div>
     <div className="mt-12 w-full h-80 bg-slate-200 rounded-xl shadow-2xl relative overflow-hidden">
-      {/* Placeholder for a screenshot of the Analysis Workspace page */}
+      {/* Placeholder for a screenshot of the Leaf Analysis page */}
       <div className="absolute inset-0 flex items-center justify-center text-slate-500 font-medium"></div>
     </div>
   </section>
@@ -91,42 +94,44 @@ const HeroSection = () => (
 const FeatureBlock = () => (
   <section id="features" className="py-20 px-6 md:px-10 bg-white">
     <h2 className="text-4xl font-bold text-center text-slate-900 mb-12">
-      How AgriVision AI Works
+      The 3-Step Path to Healthier Crops
     </h2>
     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      {/* Feature 1: Data Acquisition */}
+      {/* Feature 1: Photo Capture */}
       <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition duration-300">
-        <Map className="h-8 w-8 text-emerald-600 mb-3" />
+        <Camera className="h-8 w-8 text-emerald-600 mb-3" />
         <h3 className="text-xl font-semibold mb-2">
-          1. Rapid Data Acquisition
+          1. Capture Symptomatic Leaves
         </h3>
         <p className="text-slate-600">
-          Upload aerial scans (drone/satellite) or close-up leaf photos. Our
-          system handles image stitching and normalization automatically.
+          Use your phone or a digital camera to take clear, close-up photos of
+          leaves showing symptoms of stress or disease.
         </p>
       </div>
 
       {/* Feature 2: AI Processing */}
       <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition duration-300">
-        <Layers className="h-8 w-8 text-emerald-600 mb-3" />
+        <Microscope className="h-8 w-8 text-emerald-600 mb-3" />
         <h3 className="text-xl font-semibold mb-2">
-          2. Precision AI Diagnosis
+          2. Instant AI Lab Analysis
         </h3>
         <p className="text-slate-600">
-          Our specialized CNN model identifies nutrient stress (N, K, P) and
-          water issues based on spectral and color shifts.
+          Our advanced computer vision model analyzes the visual patterns, color
+          spectrum, and lesion shape to identify the exact pathogen or
+          deficiency.
         </p>
       </div>
 
       {/* Feature 3: Actionable Output */}
       <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition duration-300">
-        <TrendingUp className="h-8 w-8 text-emerald-600 mb-3" />
+        <Shield className="h-8 w-8 text-emerald-600 mb-3" />
         <h3 className="text-xl font-semibold mb-2">
-          3. Variable Rate Prescription
+          3. Get a Specific Treatment Plan
         </h3>
         <p className="text-slate-600">
-          Receive downloadable VRA maps, telling your equipment *exactly* how
-          much and where to apply fertilizer, reducing waste.
+          Receive a clear, specific recommendation, including required
+          nutrients, pesticides, or cultural practices, tailored to your
+          diagnosis.
         </p>
       </div>
     </div>
@@ -138,15 +143,15 @@ const CTATrustSection = () => (
   <section className="bg-slate-50 py-16 px-6 md:px-10">
     <div className="max-w-4xl mx-auto text-center">
       <h2 className="text-3xl font-bold text-slate-900">
-        Boost Yield, Reduce Costs. Guaranteed.
+        Stop Guessing. Start Treating. Guaranteed Results.
       </h2>
       <p className="text-lg text-slate-600 mt-4">
-        Join the future of precision agriculture and minimize environmental
-        impact.
+        Accurate diagnosis leads to timely action, saving you yield and money.
       </p>
       <div className="mt-8 flex justify-center space-x-8">
         <p className="flex items-center text-slate-700 font-medium gap-2">
-          <Shield className="h-5 w-5 text-emerald-600" /> Secure Data Storage
+          <Shield className="h-5 w-5 text-emerald-600" /> Secure Diagnosis
+          History
         </p>
         <p className="flex items-center text-slate-700 font-medium gap-2">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" /> Dedicated
@@ -197,12 +202,12 @@ const Footer = () => (
           </li>
           <li>
             <a href="/analysis" className="hover:text-emerald-400">
-              Field Analysis
+              Leaf Analysis
             </a>
           </li>
           <li>
             <a href="#features" className="hover:text-emerald-400">
-              Features
+              How It Works
             </a>
           </li>
         </ul>
@@ -230,7 +235,7 @@ const Footer = () => (
         </ul>
       </div>
 
-      {/* Legal/Social Placeholder */}
+      {/* Support Links */}
       <div className="space-y-3">
         <h4 className="font-semibold text-slate-200">Support</h4>
         <ul className="space-y-2 text-sm text-slate-400">

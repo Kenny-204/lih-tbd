@@ -87,7 +87,7 @@ export default function LoginPage() {
       setLoading(true);
       await login(data.email, data.password);
       toast.success("Login successful... redirecting");
-      navigate("/dashboard");
+      navigate("/dashboard/home");
     } catch (err: unknown) {
       toast.error(formatFirebaseError(err));
       console.error(err);

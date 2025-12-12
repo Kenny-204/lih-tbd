@@ -30,14 +30,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 // --- Configuration ---
 const NAV_ITEMS = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
-    active: true,
-  },
-  { label: "Leaf Analysis", icon: MapIcon, href: "analysis" },
-  { label: "Crop Health", icon: Leaf, href: "health" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "home" },
+  { label: "Leaf Analysis", icon: Leaf, href: "analysis" }, // Changed MapIcon to Leaf for analysis
   { label: "History", icon: History, href: "history" },
   { label: "Settings", icon: Settings, href: "settings" },
 ];
@@ -68,23 +62,25 @@ export default function DashboardLayout() {
       <ScrollArea className="flex-1 px-4 py-4">
         <nav className="flex flex-col gap-2">
           {NAV_ITEMS.map((item) => (
-            <NavLink to={item.href}>
-              <Button
-                key={item.label}
-                variant={item.active ? "secondary" : "ghost"}
-                className={`justify-start gap-3 h-12 w-full ${
-                  item.active
-                    ? "bg-emerald-50 text-emerald-900 hover:bg-emerald-100 font-medium border-l-4 border-emerald-600 rounded-l-none rounded-r-md"
-                    : "text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50"
-                }`}
-              >
-                <item.icon
-                  className={`h-5 w-5 ${
-                    item.active ? "text-emerald-600" : "text-slate-400"
-                  }`}
-                />
-                {item.label}
-              </Button>
+            <NavLink
+              key={item.label}
+              to={item.href}
+              // The isActive function receives the state from React Router
+              className={({ isActive }) =>
+                `flex items-center justify-start gap-3 h-12 w-full px-4 text-left transition-colors duration-200 
+                ${
+                  isActive
+                    ? // Active Styles: Uses `secondary` look with custom border
+                      "bg-emerald-50 text-emerald-900 hover:bg-emerald-100 font-medium border-l-4 border-emerald-600 rounded-l-none rounded-r-md"
+                    : // Inactive Styles: Uses `ghost` look
+                      "text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-md"
+                }`
+              }
+              // The onClick is needed to close the mobile sheet after navigation
+              onClick={() => setIsMobileOpen(false)}
+            >
+              <item.icon className={`h-5 w-5 ${"text-slate-400"}`} />
+              <span className="flex-1">{item.label}</span>
             </NavLink>
           ))}
         </nav>

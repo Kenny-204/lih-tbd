@@ -9,6 +9,7 @@ import {
   MoreHorizontal,
   ArrowRight,
   Droplets,
+  Zap, // Added Zap for 'Processing' visual
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,11 +41,11 @@ import UploadWizard from "./UploadWizard";
 import { Link } from "react-router-dom";
 
 export default function DashboardPage() {
-  // --- Mock Data (Updated for Leaf Samples) ---
+  // --- Mock Data (Updated: Removed 'field' property) ---
   const recentAnalyses = [
     {
       id: "L-1005",
-      field: "North Sector A",
+      // field: "North Sector A", <-- REMOVED
       crop: "Maize",
       date: "Today, 10:23 AM",
       diagnosis: "Nitrogen Deficiency",
@@ -53,7 +54,7 @@ export default function DashboardPage() {
     },
     {
       id: "L-1004",
-      field: "East River Plot",
+      // field: "East River Plot", <-- REMOVED
       crop: "Soybean",
       date: "Today, 9:15 AM",
       diagnosis: "Healthy",
@@ -62,7 +63,7 @@ export default function DashboardPage() {
     },
     {
       id: "L-1003",
-      field: "South Hills Farm",
+      // field: "South Hills Farm", <-- REMOVED
       crop: "Wheat",
       date: "Yesterday, 4:15 PM",
       diagnosis: "Water Stress",
@@ -71,7 +72,7 @@ export default function DashboardPage() {
     },
     {
       id: "L-1002",
-      field: "West Valley",
+      // field: "West Valley", <-- REMOVED
       crop: "Potato",
       date: "Oct 24, 2023",
       diagnosis: "Pest Damage",
@@ -83,7 +84,11 @@ export default function DashboardPage() {
   // Utility to get the correct badge style (reused from History)
   const getBadgeStyle = (severity: string, diagnosis: string) => {
     if (diagnosis === "Processing")
-      return { variant: "secondary", color: "bg-slate-100 text-slate-700" };
+      return {
+        variant: "secondary",
+        color: "bg-slate-100 text-slate-700",
+        icon: <Zap className="h-3 w-3 animate-spin mr-1" />, // Added icon for processing
+      };
     switch (severity) {
       case "Critical":
         return {
@@ -180,7 +185,7 @@ export default function DashboardPage() {
             <Progress
               value={18}
               className="h-2 mt-2 bg-slate-100"
-              // indicatorClassName="bg-yellow-500"
+              // indicatorClassName="bg-yellow-500" // Tailwind will handle this
             />
             <p className="text-xs text-slate-500 mt-1">
               Percentage of total samples
@@ -222,7 +227,7 @@ export default function DashboardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px] pl-6">Sample ID</TableHead>
-                  <TableHead>Field Name</TableHead>
+                  <TableHead>Date</TableHead> {/* Renamed Field Name to Date */}
                   <TableHead>Crop</TableHead>
                   <TableHead>AI Diagnosis</TableHead>
                   <TableHead className="text-right pr-6">Action</TableHead>
@@ -236,16 +241,20 @@ export default function DashboardPage() {
                       <TableCell className="font-medium pl-6">
                         {item.id}
                       </TableCell>
-                      <TableCell>{item.field}</TableCell>
+                      {/* Swapped Field Name column for Date column */}
+                      <TableCell className="text-slate-500 text-sm">
+                        {item.date}
+                      </TableCell>
                       <TableCell className="text-slate-600">
                         {item.crop}
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={`${
+                          className={`flex items-center w-fit text-sm font-medium ${
                             badge.color
                           } hover:${badge.color.replace("bg-", "bg-")}`}
                         >
+                          {badge.icon}
                           {item.diagnosis}
                         </Badge>
                       </TableCell>
@@ -345,12 +354,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium">Drop new leaf photos here</p>
                 <p className="text-xs text-slate-500">Supports .jpg, .png</p>
               </div>
-
-              {/* === START INTEGRATION 2: Widget Button === */}
               <UploadWizard />
-              {/* We can use the wizard here, but it will render its own button.
-               If you want the specific styling, you'd wrap the <Button> tag inside <DialogTrigger> 
-               within the UploadWizard component. For simplicity, we reuse the component. */}
             </CardContent>
           </Card>
         </div>

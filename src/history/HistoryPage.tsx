@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Leaf,
   Microscope,
+  Zap, // Added Zap for 'Processing' visual
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
+  DropdownMenuItem, // Changed CheckboxItem to simple Item for actions
 } from "@/components/ui/dropdown-menu";
 import {
   Select,
@@ -37,12 +38,11 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 
-// --- Mock Data: UPDATED for Leaf Analysis ---
+// --- Mock Data: Field removed and diagnosis types streamlined ---
 const HISTORY_RECORDS = [
   {
     id: "L-1005",
     date: "2025-10-30",
-    field: "North Sector A",
     crop: "Maize",
     diagnosis: "Nitrogen Deficiency",
     severity: "Critical",
@@ -51,16 +51,14 @@ const HISTORY_RECORDS = [
   {
     id: "L-1004",
     date: "2025-10-25",
-    field: "East River Plot",
     crop: "Soybean",
-    diagnosis: "Water Stress",
+    diagnosis: "Spider Mite Damage",
     severity: "Medium",
     status: "Analyzed",
   },
   {
     id: "L-1003",
     date: "2025-10-20",
-    field: "South Hills Farm",
     crop: "Wheat",
     diagnosis: "Healthy",
     severity: "None",
@@ -69,16 +67,14 @@ const HISTORY_RECORDS = [
   {
     id: "L-1002",
     date: "2025-10-15",
-    field: "West Valley",
     crop: "Potato",
-    diagnosis: "Potassium Deficiency",
+    diagnosis: "Early Blight",
     severity: "Low",
-    status: "AnalyAnalyzedzed",
+    status: "Analyzed",
   },
   {
     id: "L-1001",
     date: "2025-10-10",
-    field: "North Sector A",
     crop: "Maize",
     diagnosis: "Processing",
     severity: "None",
@@ -87,54 +83,51 @@ const HISTORY_RECORDS = [
 ];
 
 export default function HistoryPage() {
-  const [data, setData] = useState(HISTORY_RECORDS);
+  const [data] = useState(HISTORY_RECORDS); // Removed setData as it's not being used for mutations
   const [filters, setFilters] = useState({
     search: "",
     severity: "all",
     crop: "all",
   });
 
-  console.log(setData);
   // Utility to get the correct badge style
   interface BadgeStyle {
-    variant: string;
     color: string;
+    icon?: React.ReactNode;
   }
 
   type Severity = "Critical" | "Medium" | "Low" | "None" | string;
 
   const getBadgeStyle = (severity: Severity, diagnosis: string): BadgeStyle => {
     if (diagnosis === "Processing")
-      return { variant: "secondary", color: "bg-slate-100 text-slate-700" };
+      return {
+        color: "bg-slate-100 text-slate-700",
+        icon: <Zap className="h-3 w-3 animate-spin mr-1" />,
+      };
     switch (severity) {
       case "Critical":
         return {
-          variant: "destructive",
           color: "bg-rose-100 text-rose-700 border-rose-200",
         };
       case "Medium":
         return {
-          variant: "outline",
           color: "bg-amber-50 text-amber-700 border-amber-200",
         };
       case "Low":
         return {
-          variant: "outline",
           color: "bg-yellow-50 text-yellow-700 border-yellow-200",
         };
       case "None":
         return {
-          variant: "outline",
           color: "bg-emerald-50 text-emerald-700 border-emerald-200",
         };
       default:
-        return { variant: "secondary", color: "bg-slate-100 text-slate-700" };
+        return { color: "bg-slate-100 text-slate-700" };
     }
   };
 
   // Filter function
   const applyFilters = (record: {
-    field: string;
     diagnosis: string;
     id: string;
     severity: string;
@@ -146,7 +139,6 @@ export default function HistoryPage() {
     if (
       searchTerm &&
       !(
-        record.field.toLowerCase().includes(searchTerm) ||
         record.diagnosis.toLowerCase().includes(searchTerm) ||
         record.id.toLowerCase().includes(searchTerm)
       )
@@ -179,16 +171,17 @@ export default function HistoryPage() {
         </h1>
       </div>
       <p className="text-slate-500">
-        Review all close-up leaf diagnoses and recommended treatments.
+        Review all close-up leaf diagnoses and recommended treatments. Click on
+        a row to view the full analysis.
       </p>
 
       {/* --- Controls and Filters --- */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center">
         {/* Search Bar */}
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Search by ID, Field, or Diagnosis..."
+            placeholder="Search by ID or Diagnosis..."
             className="pl-10 w-full"
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             value={filters.search}
@@ -201,7 +194,7 @@ export default function HistoryPage() {
           className="w-full sm:w-auto gap-2 text-slate-600"
         >
           <Calendar className="h-4 w-4" />
-          Filter by Date
+          Filter by Date Range
         </Button>
 
         {/* Severity Filter */}
@@ -222,7 +215,7 @@ export default function HistoryPage() {
           </SelectContent>
         </Select>
 
-        {/* Crop Filter (New Focus) */}
+        {/* Crop Filter */}
         <Select
           onValueChange={(value) => setFilters({ ...filters, crop: value })}
           defaultValue={filters.crop}
@@ -259,7 +252,6 @@ export default function HistoryPage() {
               <TableRow>
                 <TableHead className="w-[120px]">Sample ID</TableHead>
                 <TableHead className="w-[120px]">Date</TableHead>
-                <TableHead>Field Name</TableHead>
                 <TableHead className="w-[120px]">Crop</TableHead>
                 <TableHead>AI Diagnosis</TableHead>
                 <TableHead className="text-right w-[100px] pr-6">
@@ -273,6 +265,12 @@ export default function HistoryPage() {
                 return (
                   <TableRow
                     key={record.id}
+                    // Placeholder for navigation/detail view
+                    onClick={() =>
+                      console.log(
+                        `Navigating to analysis detail for ${record.id}`
+                      )
+                    }
                     className="hover:bg-emerald-50/50 cursor-pointer"
                   >
                     <TableCell className="font-medium text-slate-900">
@@ -281,12 +279,12 @@ export default function HistoryPage() {
                     <TableCell className="text-slate-500 text-sm">
                       {record.date}
                     </TableCell>
-                    <TableCell>{record.field}</TableCell>
                     <TableCell className="text-slate-600">
                       {record.crop}
                     </TableCell>
                     <TableCell>
-                      <Badge className={`${badge.color} text-sm font-medium`}>
+                      <Badge className={`text-sm font-medium ${badge.color}`}>
+                        {badge.icon}
                         {record.diagnosis}
                       </Badge>
                     </TableCell>
@@ -303,15 +301,14 @@ export default function HistoryPage() {
                             Sample {record.id}
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuCheckboxItem checked>
+                          {/* Changed to DropdownMenuItem */}
+                          <DropdownMenuItem>
                             View Full Diagnosis
-                          </DropdownMenuCheckboxItem>
-                          <DropdownMenuCheckboxItem>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
                             Log Treatment Details
-                          </DropdownMenuCheckboxItem>
-                          <DropdownMenuCheckboxItem>
-                            Download Photo
-                          </DropdownMenuCheckboxItem>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>Download Photo</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -321,7 +318,7 @@ export default function HistoryPage() {
               {filteredData.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5} // Updated colSpan to 5 (was 6)
                     className="h-24 text-center text-slate-500"
                   >
                     No leaf samples found matching your filters.

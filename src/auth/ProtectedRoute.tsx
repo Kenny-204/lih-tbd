@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function ProtectedRoute({
@@ -7,6 +7,7 @@ export default function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
+  const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
 
   const navigate = useNavigate();
@@ -17,10 +18,11 @@ export default function ProtectedRoute({
         // not logged in → redirect
         navigate("/auth/login");
       }
+      setLoading(false);
     },
     [isAuthenticated]
   );
 
   // logged in → show child routes
-  return children;
+  return <>{!loading && children}</>;
 }
