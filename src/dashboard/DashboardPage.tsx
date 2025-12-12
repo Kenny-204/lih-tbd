@@ -108,40 +108,43 @@ export default function DashboardPage() {
   const [severityCount, setSeverityCount] = useState(0);
   const { currentUser } = useAuth();
 
-  useEffect(function () {
-    async function fetchCrop() {
-      try {
-        const { count, error: countError } = await supabase
-          .from("crops")
-          .select("*", { count: "exact", head: true }); // `head: true` avoids fetching actual rows
-        setCount(count);
-        const { count: severity, error: severityCountError } = await supabase
-          .from("crops")
-          .select("*", { count: "exact", head: true })
-          .eq("severity", "Critical"); // filter by severity
-        setSeverityCount(severity);
-        const { data, error } = await supabase
-          .from("crops")
-          .select("*")
-          .eq("user_id", currentUser.uid)
-          .order("created_at", { ascending: false })
-          .limit(5); // newest first
+  useEffect(
+    function () {
+      async function fetchCrop() {
+        try {
+          const { count, error: countError } = await supabase
+            .from("crops")
+            .select("*", { count: "exact", head: true }); // `head: true` avoids fetching actual rows
+          setCount(count);
+          const { count: severity, error: severityCountError } = await supabase
+            .from("crops")
+            .select("*", { count: "exact", head: true })
+            .eq("severity", "Critical"); // filter by severity
+          setSeverityCount(severity);
+          const { data, error } = await supabase
+            .from("crops")
+            .select("*")
+            .eq("user_id", currentUser.uid)
+            .order("created_at", { ascending: false })
+            .limit(5); // newest first
 
-        const formatted = data.map((c, index) => ({
-          id: `L-00${index + 1}`, // or c.id if you want the real ID
-          date: new Date(c.created_at).toLocaleString(),
-          crop: c.crop_name,
-          diagnosis: c.diagnosis.replace(/_/g, " "),
-          severity: c.severity,
-          status: "Analyzed",
-        }));
-        setRecentAnalyses(formatted);
-      } catch (err) {
-        console.log(err);
+          const formatted = data.map((c, index) => ({
+            id: `L-00${index + 1}`, // or c.id if you want the real ID
+            date: new Date(c.created_at).toLocaleString(),
+            crop: c.crop_name,
+            diagnosis: c.diagnosis.replace(/_/g, " "),
+            severity: c.severity,
+            status: "Analyzed",
+          }));
+          setRecentAnalyses(formatted);
+        } catch (err) {
+          console.log(err);
+        }
       }
-    }
-    fetchCrop();
-  }, []);
+      fetchCrop();
+    },
+    [recentAnalyses]
+  );
   // --- Mock Data (Updated: Removed 'field' property) ---
 
   // Utility to get the correct badge style (reused from History)
