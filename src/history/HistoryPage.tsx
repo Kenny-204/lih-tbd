@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  History,
   Search,
   Calendar,
   Filter,
@@ -8,7 +7,6 @@ import {
   ChevronDown,
   Leaf,
   Microscope,
-  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -96,6 +94,7 @@ export default function HistoryPage() {
     crop: "all",
   });
 
+  console.log(setData);
   // Utility to get the correct badge style
   interface BadgeStyle {
     variant: string;

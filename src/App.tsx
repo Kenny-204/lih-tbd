@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: "", element: <DashboardPage /> },
-      { path: "analysis/:leafId", element: <FieldAnalysisPage /> },
+      { path: "analysis/", element: <FieldAnalysisPage /> },
       { path: "history", element: <HistoryPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],

@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import {
   UploadCloud,
   Leaf,
-  MapPin,
   CheckCircle,
   Loader2,
   Crop,
@@ -30,21 +29,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { CustomMobileNet } from "@teachablemachine/image";
 import { useNavigate } from "react-router-dom";
 
-// --- Mock Data ---
-const MOCK_FIELDS = [
-  { id: "F-001", name: "North Sector A", crop: "Maize" },
-  { id: "F-002", name: "East River Plot", crop: "Soybean" },
-  { id: "F-003", name: "West Valley", crop: "Potato" },
-];
-
 export default function UploadWizard() {
-  const [targetField, setTargetField] = useState(MOCK_FIELDS[0].id);
   const [cropType, setCropType] = useState("Maize");
   type UploadedFile = { name: string; size: string; status: string };
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -55,7 +45,6 @@ export default function UploadWizard() {
   const [model, setModel] = useState<CustomMobileNet | null>(null); // To store the loaded model instance
   const [isDialogOpen, setIsDialogOpen] = useState(false); // To track if the modal is open
   const [isPredicting, setIsPredicting] = useState(false); // Tracks prediction status
-  const [prediction, setPrediction] = useState<any | null>(null);
 
   const [newAnalysisId, setNewAnalysisId] = useState<string | null>(null);
 
@@ -90,7 +79,6 @@ export default function UploadWizard() {
         confidence: (predictions[0].probability * 100).toFixed(1),
         // Log all predictions for DB storage
         allPredictions: predictions,
-        fieldId: targetField,
         crop: cropType,
         timestamp: new Date().toISOString(),
       };
@@ -129,7 +117,7 @@ export default function UploadWizard() {
 
       setFiles(uploadedFiles);
       setUploadStatus("uploading");
-      startSimulation(dataUrl);
+      startSimulation();
     };
     reader.readAsDataURL(firstFile);
   };
@@ -180,7 +168,7 @@ export default function UploadWizard() {
   };
 
   // Simulation for demonstration
-  const startSimulation = (imageToPredictDataUrl: string) => {
+  const startSimulation = () => {
     setProgress(0);
     setUploadStatus("uploading");
 
