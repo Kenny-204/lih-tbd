@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   UploadCloud,
   Leaf,
@@ -7,6 +7,8 @@ import {
   Loader2,
   Crop,
   FileText,
+  Loader2Icon,
+  ArrowRight,
 } from "lucide-react";
 
 import {
@@ -31,6 +33,8 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { CustomMobileNet } from "@teachablemachine/image";
+import { useNavigate } from "react-router-dom";
 
 // --- Mock Data ---
 const MOCK_FIELDS = [
@@ -47,49 +51,136 @@ export default function UploadWizard() {
   const [uploadStatus, setUploadStatus] = useState("idle"); // idle, uploading, complete, error
   const [progress, setProgress] = useState(0);
 
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevents files from opening in the browser
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [model, setModel] = useState<CustomMobileNet | null>(null); // To store the loaded model instance
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // To track if the modal is open
+  const [isPredicting, setIsPredicting] = useState(false); // Tracks prediction status
+  const [prediction, setPrediction] = useState<any | null>(null);
 
-    // Filter to only accept common image types
-    const filesArray = Array.from(e.dataTransfer.files).filter((file) =>
-      file.type.startsWith("image/")
-    );
+  const [newAnalysisId, setNewAnalysisId] = useState<string | null>(null);
 
-    const uploadedFiles = filesArray.map((file) => ({
-      name: file.name,
-      size: (file.size / 1024 / 1024).toFixed(2), // Size in MB
-      status: "pending",
-    }));
+  // Ref and Image State: Still needed to run the prediction model
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    if (uploadedFiles.length > 0) {
+  const navigate = useNavigate();
+
+  const handleNavigation = (id: string) => {
+    // In a real application (e.g., Next.js, React Router), you would use:
+    // router.push(`/analysis/${id}`);
+
+    setUploadStatus("complete");
+    navigate(`/dashboard/analysis/${id}`);
+  };
+  const predictDisease = async (imgElement: HTMLImageElement) => {
+    if (!model) {
+      console.error("Model not loaded.");
+      setUploadStatus("error"); // Failed prediction is a final status
+      return;
+    }
+
+    setIsPredicting(true);
+
+    try {
+      const predictions = await model.predict(imgElement);
+      predictions.sort((a, b) => b.probability - a.probability);
+
+      const diagnosisResult = {
+        topClass: predictions[0].className,
+        confidence: (predictions[0].probability * 100).toFixed(1),
+        // Log all predictions for DB storage
+        allPredictions: predictions,
+        fieldId: targetField,
+        crop: cropType,
+        timestamp: new Date().toISOString(),
+      };
+
+      // 🌟 STEP 3: LOG/SAVE TO DB 🌟
+      console.log(diagnosisResult);
+
+      // Generate a Mock Analysis ID (replace with actual DB insert ID)
+      const mockId = `L-${Math.floor(Math.random() * 10000)}`;
+      setNewAnalysisId(mockId);
+
+      // 🌟 STEP 4: TRIGGER REDIRECT (after prediction finishes) 🌟
+      handleNavigation(mockId);
+    } catch (error) {
+      console.error("Prediction error:", error);
+      setUploadStatus("error"); // Set final status to error
+      alert("Error making prediction. Check console for details.");
+    }
+
+    setIsPredicting(false);
+  };
+  const processFiles = (filesArray: File[]) => {
+    if (filesArray.length === 0) return;
+    const firstFile = filesArray[0];
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setSelectedImage(dataUrl);
+      const uploadedFiles: UploadedFile[] = filesArray.map((file) => ({
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(2),
+        status: "pending",
+        dataUrl: file === firstFile ? dataUrl : undefined, // Attach dataUrl to first file only for reference
+      }));
+
       setFiles(uploadedFiles);
       setUploadStatus("uploading");
-      startSimulation();
-    }
+      startSimulation(dataUrl);
+    };
+    reader.readAsDataURL(firstFile);
   };
 
+  const loadTeachableMachineModel = async () => {
+    if (model) {
+      console.log("Model already loaded.");
+      return;
+    }
+
+    setIsModelLoading(true);
+    console.log("Starting model load...");
+
+    try {
+      // Use dynamic imports to prevent issues if Teachable Machine is not installed
+      // If you are using a standard React/Next.js environment, you might need to adjust this import.
+      const tmImage = await import("@teachablemachine/image");
+
+      const modelURL =
+        "https://teachablemachine.withgoogle.com/models/e2cVE9iV7/model.json";
+      const metadataURL =
+        "https://teachablemachine.withgoogle.com/models/e2cVE9iV7/metadata.json";
+
+      const loadedModel = await tmImage.load(modelURL, metadataURL);
+
+      setModel(loadedModel);
+      setIsModelLoading(false);
+      console.log("Model loaded successfully!");
+    } catch (error) {
+      console.error("Error loading model:", error);
+      alert("Failed to load model. Check console for details.");
+      setIsModelLoading(false);
+    }
+  };
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const filesArray = Array.from(e.dataTransfer.files).filter((file) =>
+      file.type.startsWith("image/")
+    ) as File[];
+    processFiles(filesArray);
+  };
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Filter to only accept common image types
     const filesArray = Array.from(e.target.files ?? []).filter((file: File) =>
       file.type.startsWith("image/")
-    );
-
-    const uploadedFiles = filesArray.map((file: File) => ({
-      name: file.name,
-      size: (file.size / 1024 / 1024).toFixed(2),
-      status: "pending",
-    }));
-
-    if (uploadedFiles.length > 0) {
-      setFiles(uploadedFiles);
-      setUploadStatus("uploading");
-      startSimulation();
-    }
+    ) as File[];
+    processFiles(filesArray);
   };
 
   // Simulation for demonstration
-  const startSimulation = () => {
+  const startSimulation = (imageToPredictDataUrl: string) => {
     setProgress(0);
     setUploadStatus("uploading");
 
@@ -99,8 +190,18 @@ export default function UploadWizard() {
           return prev + 10;
         } else {
           clearInterval(interval);
-          // In a real app, this would trigger the backend analysis job
-          setUploadStatus("complete");
+
+          // CRITICAL: Ensure image is loaded before attempting prediction
+          setTimeout(() => {
+            if (imageRef.current) {
+              predictDisease(imageRef.current);
+            } else {
+              setUploadStatus("error");
+              console.error(
+                "Image element not found for prediction. Cannot predict."
+              );
+            }
+          }, 500);
           return 100;
         }
       });
@@ -118,10 +219,21 @@ export default function UploadWizard() {
   const isUploadDisabled =
     files.length === 0 ||
     uploadStatus === "uploading" ||
-    uploadStatus === "complete";
-
+    uploadStatus === "complete" ||
+    isModelLoading ||
+    isPredicting;
+  if (isModelLoading) return <Loader2Icon />;
   return (
-    <Dialog>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (open) {
+          // Trigger model load ONLY when the dialog opens
+          loadTeachableMachineModel();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button className="bg-emerald-600 hover:bg-emerald-700 gap-2">
           <UploadCloud className="h-4 w-4" /> New Sample
@@ -156,7 +268,7 @@ export default function UploadWizard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Maize">Maize (Corn)</SelectItem>
-                  <SelectItem value="Soybean">Soybean</SelectItem>
+                  <SelectItem value="Tomato">Tomato</SelectItem>
                   <SelectItem value="Wheat">Wheat</SelectItem>
                   <SelectItem value="Potato">Potato</SelectItem>
                   <SelectItem value="Other">Other...</SelectItem>
@@ -165,23 +277,6 @@ export default function UploadWizard() {
             </div>
 
             {/* Target Field Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="target-field" className="flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-slate-500" /> Sample Location
-              </Label>
-              <Select onValueChange={setTargetField} defaultValue={targetField}>
-                <SelectTrigger id="target-field">
-                  <SelectValue placeholder="Select a field" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MOCK_FIELDS.map((field) => (
-                    <SelectItem key={field.id} value={field.id}>
-                      {field.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <Separator />
@@ -189,6 +284,15 @@ export default function UploadWizard() {
           <h3 className="text-lg font-semibold text-slate-800">
             2. Photo Upload
           </h3>
+          {selectedImage && (
+            <img
+              ref={imageRef}
+              src={selectedImage}
+              alt="Prediction Input"
+              style={{ display: "none" }} // Hide the image element visually
+              onLoad={() => console.log("Image Data Loaded into DOM")} // Optional debug log
+            />
+          )}
           <div
             onDrop={handleFileDrop}
             onDragOver={(e) => e.preventDefault()}
@@ -285,13 +389,37 @@ export default function UploadWizard() {
 
         <DialogFooter className="pt-4">
           <Button
-            onClick={startSimulation}
+            onClick={() => {
+              // Only call processFiles if files are selected and process hasn't started/completed
+              if (files.length > 0 && uploadStatus === "idle") {
+                // The click handler doesn't give us the files directly, so we use the input element:
+                const input = document.getElementById(
+                  "file-input-leaf"
+                ) as HTMLInputElement | null;
+                if (input && input.files && input.files.length > 0) {
+                  processFiles(Array.from(input.files) as File[]);
+                }
+              } else if (newAnalysisId) {
+                // If prediction is complete, clicking the button triggers navigation
+                handleNavigation(newAnalysisId);
+              }
+            }}
             disabled={isUploadDisabled}
             className="w-full bg-emerald-600 hover:bg-emerald-700"
           >
-            {uploadStatus === "complete"
-              ? "View Analysis Results"
-              : "Submit for AI Analysis"}
+            {isModelLoading ? (
+              "Waiting for AI Model..."
+            ) : isPredicting ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Diagnosing...
+              </span>
+            ) : newAnalysisId ? (
+              <span className="flex items-center gap-2">
+                View Analysis <ArrowRight className="h-4 w-4" />
+              </span>
+            ) : (
+              "Submit for AI Analysis"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
