@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import React, { useState } from "react";
 import {
   LayoutDashboard,
@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 // --- Configuration ---
 const NAV_ITEMS = [
@@ -35,10 +36,10 @@ const NAV_ITEMS = [
     href: "/dashboard",
     active: true,
   },
-  { label: "Field Analysis", icon: MapIcon, href: "/analysis" },
-  { label: "Crop Health", icon: Leaf, href: "/health" },
-  { label: "History", icon: History, href: "/history" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Field Analysis", icon: MapIcon, href: "analysis" },
+  { label: "Crop Health", icon: Leaf, href: "health" },
+  { label: "History", icon: History, href: "history" },
+  { label: "Settings", icon: Settings, href: "settings" },
 ];
 
 interface DashboardLayoutProps {
@@ -47,6 +48,11 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { signOut } = useAuth();
+
+  async function handleLogout() {
+    signOut();
+  }
 
   // --- Components ---
 
@@ -66,22 +72,24 @@ export default function DashboardLayout() {
       <ScrollArea className="flex-1 px-4 py-4">
         <nav className="flex flex-col gap-2">
           {NAV_ITEMS.map((item) => (
-            <Button
-              key={item.label}
-              variant={item.active ? "secondary" : "ghost"}
-              className={`justify-start gap-3 h-12 w-full ${
-                item.active
-                  ? "bg-emerald-50 text-emerald-900 hover:bg-emerald-100 font-medium border-l-4 border-emerald-600 rounded-l-none rounded-r-md"
-                  : "text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50"
-              }`}
-            >
-              <item.icon
-                className={`h-5 w-5 ${
-                  item.active ? "text-emerald-600" : "text-slate-400"
+            <NavLink to={item.href}>
+              <Button
+                key={item.label}
+                variant={item.active ? "secondary" : "ghost"}
+                className={`justify-start gap-3 h-12 w-full ${
+                  item.active
+                    ? "bg-emerald-50 text-emerald-900 hover:bg-emerald-100 font-medium border-l-4 border-emerald-600 rounded-l-none rounded-r-md"
+                    : "text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50"
                 }`}
-              />
-              {item.label}
-            </Button>
+              >
+                <item.icon
+                  className={`h-5 w-5 ${
+                    item.active ? "text-emerald-600" : "text-slate-400"
+                  }`}
+                />
+                {item.label}
+              </Button>
+            </NavLink>
           ))}
         </nav>
       </ScrollArea>
@@ -186,8 +194,10 @@ export default function DashboardLayout() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-rose-600 focus:text-rose-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <button onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
