@@ -104,11 +104,22 @@ const recentAnalyses = [
 export default function DashboardPage() {
   const [recentAnalyses, setRecentAnalyses] =
     useState<analysis[]>(initialAnalyses);
+  const [count, setCount] = useState(0);
+  const [severityCount, setSeverityCount] = useState(0);
   const { currentUser } = useAuth();
 
   useEffect(function () {
     async function fetchCrop() {
       try {
+        const { count, error: countError } = await supabase
+          .from("crops")
+          .select("*", { count: "exact", head: true }); // `head: true` avoids fetching actual rows
+        setCount(count);
+        const { count: severity, error: severityCountError } = await supabase
+          .from("crops")
+          .select("*", { count: "exact", head: true })
+          .eq("severity", "Critical"); // filter by severity
+        setSeverityCount(severity);
         const { data, error } = await supabase
           .from("crops")
           .select("*")
@@ -198,7 +209,7 @@ export default function DashboardPage() {
             <Microscope className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">145 Samples</div>
+            <div className="text-2xl font-bold">{count} Samples</div>
             <p className="text-xs text-slate-500 mt-1">
               <span className="text-emerald-600 font-medium flex items-center inline-block">
                 +25 <ArrowUpRight className="h-3 w-3 inline ml-0.5" />
@@ -217,7 +228,9 @@ export default function DashboardPage() {
             <AlertTriangle className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">3 Samples</div>
+            <div className="text-2xl font-bold text-slate-900">
+              {severityCount} Samples
+            </div>
             <p className="text-xs text-slate-500 mt-1">
               Requires immediate treatment
             </p>

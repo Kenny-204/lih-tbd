@@ -99,7 +99,7 @@ export default function UploadWizard() {
             ${JSON.stringify(predictionData)}
             Output a JSON object exactly like this (no extra text):
             {
-              "severity": "",
+              "severity": "",  // must be one of "Critical", "Medium", "Low", "None"
               "treatment_plan": "",
               "key_symptoms": []
             }

@@ -156,7 +156,7 @@ export default function HistoryPage() {
         icon: <Zap className="h-3 w-3 animate-spin mr-1" />,
       };
     switch (severity) {
-      case "High":
+      case "Critical":
         return {
           color: "bg-rose-100 text-rose-700 border-rose-200",
         };
