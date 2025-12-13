@@ -84,7 +84,7 @@ export default function UploadWizard() {
       };
       console.log(predictions);
 
-      const geminiKey = "AIzaSyDZPKpGYfyznnt9UxToh6Zq9O1k322eolw";
+      const geminiKey = import.meta.env.VITE_GOOGLE_API_KEY;
 
       const MODEL = "gemini-2.5-flash-lite";
 
