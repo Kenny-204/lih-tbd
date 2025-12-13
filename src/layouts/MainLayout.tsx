@@ -11,6 +11,7 @@ import {
   Bell,
   LogOut,
   User,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,8 @@ import { useAuth } from "@/contexts/AuthContext";
 // --- Configuration ---
 const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "home" },
-  { label: "Leaf Analysis", icon: Leaf, href: "analysis" }, // Changed MapIcon to Leaf for analysis
+  //{ label: "Leaf Analysis", icon: Leaf, href: "analysis" }, // Changed MapIcon to Leaf for analysis
+  { label: "Marketplace", icon: Store, href: "marketplace" },
   { label: "History", icon: History, href: "history" },
   { label: "Settings", icon: Settings, href: "settings" },
 ];

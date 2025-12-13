@@ -9,6 +9,7 @@ import LoginPage from "./auth/LoginPage";
 import SignupPage from "./auth/SignupPage";
 import LandingPage from "./landing/LandingPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import MarketplacePage from "./marketplace/MarketPlace";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { path: "analysis/:id", element: <FieldAnalysisPage /> },
       { path: "history", element: <HistoryPage /> },
       { path: "settings", element: <SettingsPage /> },
+      { path: "marketplace", element: <MarketplacePage /> },
     ],
   },
   {

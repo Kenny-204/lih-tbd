@@ -1,19 +1,29 @@
-import {
-  CheckCircle,
-  Leaf,
-  Microscope,
-  Zap,
-  Shield,
-  MapPin,
+import React, { useState } from "react";
+import { 
+  CheckCircle, 
+  Microscope, 
+  Zap, 
+  Shield, 
+  Store, 
+  Package 
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/supabase/config";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // --- Mock Data ---
 interface AnalysisMetadata {
@@ -30,83 +40,116 @@ interface AnalysisResult {
   metadata: AnalysisMetadata;
 }
 
-// const ANALYSIS_RESULT: AnalysisResult = {
-//   diagnosis: "Tomato Early blight",
-//   confidence: 97,
-//   severity: "Critical",
-//   recommended_treatment:
-//     "Apply Urea fertilizer (46-0-0) as a foliar spray immediately. Also consider a copper-based fungicide application.",
-//   key_symptoms: [
-//     "Yellowing starts at leaf tips",
-//     "Progresses along the midrib in a V-shape",
-//     "Older leaves affected first",
-//   ],
-//   metadata: {
-//     crop: "Tomato",
-//     scanDate: "Oct 30, 2025",
-//   },
-// };
+const ANALYSIS_RESULT: AnalysisResult = {
+  // Using a Healthy example to make listing on marketplace make sense
+  diagnosis: "Healthy / Low Risk", 
+  confidence: 94,
+  severity: "Low",
+  recommended_treatment: "Crop is healthy. Continue standard irrigation schedule.",
+  key_symptoms: ["Vibrant green coloration", "No visible lesions", "Firm texture"],
+  metadata: { crop: "Maize", scanDate: "Oct 30, 2025" },
+};
 
 export default function LeafAnalysisDetail() {
-  const [analysisData, setAnalysisData] = useState(null);
-  const { id } = useParams();
-
-  useEffect(function () {
-    async function fetchCrop() {
-      try {
-        const { data, error } = await supabase
-          .from("crops")
-          .select("*")
-          .eq("id", id)
-          .single();
-        setAnalysisData({
-          diagnosis: data.diagnosis.split("_").join(" "),
-          confidence: data.confidence,
-          cropName: data.crop_name,
-          createdAt: data.created_at,
-          severity: data.severity,
-          recommended_treatment: data.treatment_plan,
-          key_symptoms: data.key_symptoms,
-        });
-        console.log(data, error);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-    fetchCrop();
-  }, []);
+  const [isListingOpen, setIsListingOpen] = useState(false);
 
   const getSeverityColor = (severity: string): string => {
     switch (severity) {
-      case "Critical":
-        return "bg-rose-500 hover:bg-rose-600";
-      case "Medium":
-        return "bg-amber-500 hover:bg-amber-600";
-      default:
-        return "bg-emerald-500 hover:bg-emerald-600";
+      case "Critical": return "bg-rose-500 hover:bg-rose-600";
+      case "Medium": return "bg-amber-500 hover:bg-amber-600";
+      default: return "bg-emerald-500 hover:bg-emerald-600";
     }
+  };
+
+  const handleListForSale = () => {
+    // Logic to save to DB goes here
+    setIsListingOpen(false);
+    alert("Item listed on marketplace successfully!");
   };
 
   return (
     <div className="space-y-6">
+      
       {/* --- Header --- */}
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-        <Microscope className="h-7 w-7 text-emerald-600" />
-        Leaf Analysis: {analysisData?.cropName || "Loading..."}
-      </h1>
-      <div className="flex items-center gap-4 text-slate-500">
-        <p>
-          Sample scanned on {new Date(analysisData?.createdAt).toDateString()}.
-        </p>
-        <Separator orientation="vertical" className="h-4" />
-        <Badge variant="outline" className="text-slate-600">
-          <MapPin className="h-3 w-3 mr-1" /> Field Data Pending
-        </Badge>
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div>
+           <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
+             <Microscope className="h-7 w-7 text-emerald-600" />
+             Leaf Analysis: {ANALYSIS_RESULT.metadata.crop}
+           </h1>
+           <div className="flex items-center gap-4 text-slate-500 mt-1">
+             <p>Sample scanned on <span className="font-semibold">{ANALYSIS_RESULT.metadata.scanDate}</span>.</p>
+           </div>
+        </div>
+        
+        {/* --- 🛒 NEW: ADD TO MARKETPLACE BUTTON --- */}
+        <Dialog open={isListingOpen} onOpenChange={setIsListingOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
+               <Store className="h-4 w-4" /> List on Marketplace
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Sell Your Crop</DialogTitle>
+              <DialogDescription>
+                Create a listing for this batch. The "AI Verified" badge will be applied automatically based on this health scan.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+               {/* Auto-filled Info */}
+               <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-md flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-800">Verified Healthy Batch</p>
+                    <p className="text-xs text-emerald-600">Based on scan ID L-1005 • Confidence 94%</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                   <Label>Price per Kg (₦)</Label>
+                   <div className="relative">
+                      {/* Naira Symbol */}
+                      <span className="absolute left-3 top-2.5 text-slate-500 font-semibold">₦</span>
+                      <Input placeholder="1,000" className="pl-9" type="number" />
+                   </div>
+                 </div>
+                 <div className="space-y-2">
+                   <Label>Quantity Available (kg)</Label>
+                   <div className="relative">
+                      <Package className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                      <Input placeholder="500" className="pl-9" type="number" />
+                   </div>
+                 </div>
+               </div>
+               
+               <div className="space-y-2">
+                  <Label>Listing Title</Label>
+                  <Input defaultValue={`Fresh ${ANALYSIS_RESULT.metadata.crop} - Verified Quality`} />
+               </div>
+
+               <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea placeholder="Describe harvest date, pickup options, etc." />
+               </div>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={handleListForSale} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                Publish Listing
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* --- END MARKETPLACE BUTTON --- */}
+
       </div>
 
-      {/* --- Main Content: Two Columns (Diagnosis and Recommendation) --- */}
-      {/* Removed the outer grid and image container entirely */}
+      {/* --- Main Content (Diagnosis and Treatment) --- */}
       <div className="grid gap-6 lg:grid-cols-2">
+        
         {/* === 1. AI Diagnosis Card (Left Column) === */}
         <Card className="shadow-lg border-t-4 border-t-emerald-600">
           <CardHeader>
@@ -120,14 +163,14 @@ export default function LeafAnalysisDetail() {
               <p className="text-sm text-slate-500">Predicted Issue:</p>
               <div className="flex items-center justify-between">
                 <h3 className="text-3xl font-extrabold text-slate-900">
-                  {analysisData?.diagnosis || "Loading..."}
+                  {ANALYSIS_RESULT.diagnosis}
                 </h3>
                 <Badge
                   className={`text-white ${getSeverityColor(
-                    analysisData?.severity
+                    ANALYSIS_RESULT.severity
                   )} text-base p-2`}
                 >
-                  {analysisData?.severity}
+                  {ANALYSIS_RESULT.severity}
                 </Badge>
               </div>
             </div>
@@ -136,23 +179,25 @@ export default function LeafAnalysisDetail() {
 
             {/* Confidence */}
             <div className="flex items-center justify-between">
-              <p className="font-medium text-slate-700">AI Confidence Score:</p>
+              <p className="font-medium text-slate-700">
+                AI Confidence Score:
+              </p>
               <Badge
                 variant="secondary"
                 className="text-lg p-2 font-bold text-emerald-700"
               >
-                {analysisData?.confidence}%
+                {ANALYSIS_RESULT.confidence}%
               </Badge>
             </div>
-
+            
             <Separator />
-
+            
             {/* Contextual Description/Symptoms */}
             <h4 className="font-semibold text-slate-700">
               Key Symptom Characteristics:
             </h4>
             <ul className="space-y-2">
-              {analysisData?.key_symptoms.map((symptom, index) => (
+              {ANALYSIS_RESULT.key_symptoms.map((symptom, index) => (
                 <li
                   key={index}
                   className="flex items-start gap-3 text-slate-600 text-sm"
@@ -174,7 +219,7 @@ export default function LeafAnalysisDetail() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-lg font-semibold text-slate-800">
-              {analysisData?.recommended_treatment}
+              {ANALYSIS_RESULT.recommended_treatment}
             </p>
 
             <Separator />
@@ -183,9 +228,7 @@ export default function LeafAnalysisDetail() {
               Detailed Action Steps:
             </h4>
             <p className="text-slate-600 text-sm">
-              Given the **{analysisData?.severity}** severity, immediate action
-              is recommended. Consult local agricultural guidelines before
-              applying any treatment.
+                Given the **{ANALYSIS_RESULT.severity}** severity, consult local agricultural guidelines. If listing on the marketplace, ensure the crop meets standard quality checks.
             </p>
 
             <Button className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4">
